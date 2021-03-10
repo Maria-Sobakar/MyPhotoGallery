@@ -19,7 +19,7 @@ class PhotoGallerySearchPagingSource (
             val response = service.searchPhotos(query,pageNumber)
             val photos = response.body()?.results
             val totalPages = response.body()?.pages?:1
-            val nextPageNumber = if (pageNumber<totalPages) ++pageNumber else totalPages
+            val nextPageNumber = if (pageNumber<totalPages) ++pageNumber else null
             LoadResult.Page(
                 photos ?: listOf(),
                 null,

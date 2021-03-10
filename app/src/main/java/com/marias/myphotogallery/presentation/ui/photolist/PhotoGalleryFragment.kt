@@ -5,13 +5,17 @@ import android.content.res.Configuration
 import android.os.Bundle
 import android.view.*
 import androidx.appcompat.widget.SearchView
+import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
+import androidx.paging.LoadState
 import androidx.recyclerview.widget.GridLayoutManager
+import com.google.android.material.snackbar.Snackbar
 import com.marias.myphotogallery.R
 import com.marias.myphotogallery.databinding.PhotoGalleryFragmentLayoutBinding
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -49,6 +53,16 @@ class PhotoGalleryFragment : Fragment() {
         }
     }
 
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return when (item.itemId) {
+            R.id.clear -> {
+                viewModel.loadPhotos()
+                true
+            }
+            else -> super.onOptionsItemSelected(item)
+        }
+    }
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -56,10 +70,34 @@ class PhotoGalleryFragment : Fragment() {
     ): View {
         _binding = PhotoGalleryFragmentLayoutBinding.inflate(layoutInflater, container, false)
         val recyclerView = binding.photoRecyclerView
+        val emptyTextView = binding.photoListTextView
         val orientation = requireActivity().resources.configuration.orientation
         val spanCount = if (orientation == Configuration.ORIENTATION_PORTRAIT) 3 else 5
         recyclerView.layoutManager = GridLayoutManager(requireContext(), spanCount)
         recyclerView.adapter = adapter
+        adapter.addLoadStateListener { loadState ->
+            if (loadState.source.refresh is LoadState.NotLoading && loadState.append.endOfPaginationReached && adapter.itemCount < 1) {
+                recyclerView.isVisible = false
+                emptyTextView.isVisible = true
+            } else {
+                recyclerView.isVisible = true
+                emptyTextView.isVisible = false
+            }
+        }
+        lifecycleScope.launch {
+            adapter.loadStateFlow.collectLatest { loadStates ->
+                binding.photoListProgressBar.isVisible = loadStates.refresh is LoadState.Loading
+
+                if (loadStates.refresh is LoadState.Error) {
+                    binding.errorLinearLayout.isVisible = true
+                    Snackbar.make(
+                        binding.photoListCoordinatorLayout,
+                        requireContext().getText(R.string.network_error),
+                        Snackbar.LENGTH_LONG
+                    ).show()
+                }
+            }
+        }
         return binding.root
     }
 
@@ -70,6 +108,7 @@ class PhotoGalleryFragment : Fragment() {
                 adapter.submitData(it)
             }
         }
+        binding.retryButton.setOnClickListener { viewModel.loadPhotos() }
     }
 
     override fun onDestroyView() {

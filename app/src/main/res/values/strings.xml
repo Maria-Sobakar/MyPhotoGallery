@@ -2,4 +2,10 @@
     <string name="app_name">MyPhotoGallery</string>
     <string name="clear_search">Clear search</string>
     <string name="search_title">Search</string>
+    <string name="nothing_found">Nothing found</string>
+    <string name="save">Save image</string>
+    <string name="image_downloading_started">Image download…</string>
+    <string name="error">Something went wrong…</string>
+    <string name="network_error">No internet connection</string>
+    <string name="retry">Retry</string>
 </resources>

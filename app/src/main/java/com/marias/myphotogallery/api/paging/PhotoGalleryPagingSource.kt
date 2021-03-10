@@ -1,7 +1,10 @@
 package com.marias.myphotogallery.api.paging
 
+import android.content.Context
 import androidx.paging.PagingSource
 import androidx.paging.PagingState
+import com.google.android.material.snackbar.Snackbar
+import com.marias.myphotogallery.R
 import com.marias.myphotogallery.data.PhotoItem
 import com.marias.myphotogallery.api.UnsplashApiService
 
